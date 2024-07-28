@@ -54,16 +54,9 @@ const char* tabs[] = {"CONTROL PANEL", "ABOUT"}; // Tab names
 uint8_t waveform = 0; // Waveform selection
 
 // Test variables
-bool testState = false;
-uint16_t testValue = 0;
-bool testStart = false;
-
-// Define the TestEnum
-enum TestEnum { Option1, Option2, Option3 };
-const char* testEnumOptions[] = {"Option1", "Option2", "Option3"};
-const uint8_t num_options = 3;
-uint8_t sel_option = 0;
-bool expanded = false;
+bool armed1 = false;
+bool armed2 = false;
+bool started = false;
 
 // Function prototypes
 void drawInterface();
@@ -95,6 +88,7 @@ void loop() {
     unsigned long currentTime = millis();
     if (currentTime - lastTouchTime > touchDebounceDelay) {
       tft.touchReadPixel(&tx, &ty); // Get touch coordinates
+      Serial.println("Touch detected at x: " + String(tx) + " y: " + String(ty));
       handleTouch(); // Handle touch input
       lastTouchTime = currentTime; // Update the timestamp of the last touch event
     }
@@ -194,25 +188,19 @@ void handleTouch() {
   // Add more touch regions for other controls here
   if (currentTab == 0) {
     // Handle touch for buttons
-    if (ui.handleButtonTouch(tx, ty, 20, tft.height() - 60 - 15 - 5, 100, 60, testStart ? "Stop" : "Start", testStart)) {
-      ui.drawButton(20, tft.height() - 60 - 15 - 5, 100, 60, testStart ? "Stop" : "Start", testStart);
-      testStart ? ui.drawSwitchingWaveform() : ui.drawOffWaveform();
+    if (ui.handleButtonTouch(tx, ty, 20, tft.height() - 60 - 15 - 5, 100, 60, started ? "Stop" : "Start", started)) {
+      ui.drawButton(20, tft.height() - 60 - 15 - 5, 100, 60, started ? "Stop" : "Start", started);
+      started ? ui.drawSwitchingWaveform() : ui.drawOffWaveform();
+      Serial.println("Button touched at x: " + String(tx) + " y: " + String(ty));
       return;
     }
     // Handle touch for Toggle
-    if (ui.handleToggleTouch(tx, ty, 550, 100, testState)) {
+    if (ui.handleToggleTouch(tx, ty, 550, 100, armed1)) {
+      Serial.println("Toggle touched at x: " + String(tx) + " y: " + String(ty));
       return;
     }
-    // Handle touch for Enum Dropdown
-    if (ui.handleEnumDropdownTouch(tx, ty, 550, 280, 200, 40, testEnumOptions, num_options, sel_option, expanded)) {
-      return;
-    }
-    // Handle touch for Slider
-    if (ui.handleSliderTouch(tx, ty, 562, 370, tft.width()/4 - 17, testValue, 0, 4000)) {
-      return;
-    }
-    // Handle touch for Stepper
-    if (ui.handleStepperTouch(tx, ty, 590, 400, testValue)) {
+    if (ui.handleToggleTouch(tx, ty, 550, 200, armed2)) {
+      Serial.println("Toggle touched at x: " + String(tx) + " y: " + String(ty));
       return;
     }
   }
@@ -230,25 +218,27 @@ void showTab1Content() {
   tft.drawRoundRect(tft.width() - tft.width()/3 -1, 66, tft.width()/3 - 15, tft.height() - 51 - 15*2, 10, RA8875_BLACK);
   tft.fillRoundRect(tft.width() - tft.width()/3, 67, tft.width()/3 - 17, tft.height() - 51 - 16*2, 10, tft.Color565(169, 168, 240));
   // Draw a toggle button
-  ui.drawToggle(550, 100, testState);
+  ui.drawToggle(550, 100, armed1);
+  ui.drawToggle(550, 200, armed2);
   tft.setTextColor(RA8875_BLACK);
   tft.setCursor(630, 105);
   tft.print("Arm Output");
-  // Draw a stepper control
-  ui.drawStepper(590, 400, testValue);
-  // Draw a slider control
-  ui.drawSlider(562, 370, tft.width()/4 - 17, 40, testValue, 0, 4000);
-  // Draw a enum dropdown control
-  ui.drawEnumDropdown(550, 280, 200, 40, testEnumOptions[sel_option], testEnumOptions, num_options, sel_option, expanded);
+  tft.setCursor(630, 205);
+  tft.print("Arm Output");
 
   tft.drawRoundRect(15, tft.height() - 85, tft.width() - tft.width()/3 - 28, 100 - 15*2, 10, RA8875_BLACK);
   tft.fillRoundRect(16, tft.height() - 85 + 1, tft.width() - tft.width()/3 - 30, 100 - 16*2, 10, tft.Color565(169, 168, 240));
-  // Draw a start button and a stop button
-  ui.drawButton(20, tft.height() - 60 - 15 - 5, 100, 60, testStart ? "Stop" : "Start", testStart);
+  // Draw a start/stop button only if both toggles are armed
+  if (armed1 && armed2) {
+    ui.drawButton(20, tft.height() - 60 - 15 - 5, 100, 60, started ? "Stop" : "Start", started);
+  }
+  else {
+    started = false;
+  }
 
   tft.drawRoundRect(15, 66, tft.width() - tft.width()/3 - 28, 345 - 15*2, 10, RA8875_BLACK);
   tft.fillRoundRect(16, 67, tft.width() - tft.width()/3 - 30, 345 - 16*2, 10, tft.Color565(169, 168, 240));
-  testStart ? ui.drawSwitchingWaveform() : ui.drawOffWaveform();
+  started ? ui.drawSwitchingWaveform() : ui.drawOffWaveform();
 
 
   // Add more controls for Tab 1 here

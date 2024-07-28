@@ -57,7 +57,7 @@ void UI::drawButton(uint16_t x, uint16_t y, uint16_t width, uint16_t height, Str
 }
 
 bool UI::handleButtonTouch(uint16_t tx, uint16_t ty, uint16_t x, uint16_t y, uint16_t width, uint16_t height, String text, bool &selected) {
-  if (tx >= x && tx <= x + width && ty >= y && ty <= y + height) {
+  if (tx >= x && tx <= x + width && ty >= y+25 && ty <= y + height+25) {
     selected = !selected;
     delay(100);
     drawButton(x, y, width, height, text, selected);
@@ -82,7 +82,7 @@ void UI::drawToggle(uint16_t x, uint16_t y, bool state) {
 }
 
 bool UI::handleToggleTouch(uint16_t tx, uint16_t ty, uint16_t x, uint16_t y, bool &state) {
-  if (tx >= x && tx <= x + 70 && ty >= y && ty <= y + 40) {
+  if (tx >= x+30 && tx <= x + 115 && ty >= y && ty <= y + 40) {
     state = !state;
     drawToggle(x, y, state);
     return true;
@@ -134,8 +134,8 @@ void UI::drawSlider(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uin
 }
 
 bool UI::handleSliderTouch(uint16_t tx, uint16_t ty, uint16_t x, uint16_t y, uint16_t width, uint16_t &value, uint16_t min, uint16_t max) {
-  if (tx >= x && tx <= x + width && ty >= y && ty <= y + 40) {
-    value = map(tx, x, x + width, min, max);
+  if (tx >= x+20 && tx <= x + width + 20 && ty >= y && ty <= y + 40) {
+    value = map(tx-20, x, x + width, min, max);
     drawSlider(x, y, width, 40, value, min, max);
     return true;
   }
@@ -167,15 +167,15 @@ void UI::drawEnumDropdown(uint16_t x, uint16_t y, uint16_t width, uint16_t heigh
 
 bool UI::handleEnumDropdownTouch(uint16_t tx, uint16_t ty, uint16_t x, uint16_t y, uint16_t width, uint16_t height, const char* options[], uint8_t numOptions, uint8_t &selectedOption, bool &expanded) {
   if (tx >= x && tx <= x + width && ty >= y && ty <= y + height) {
-    expanded = !expanded;
+    expanded = true;
     return true;
   }
   if (expanded) {
     for (int i = 0; i < numOptions; i++) {
       if (tx >= x && tx <= x + width && ty >= y + 10 + (i+1)*height && ty <= y + 10 + (i+2)*height) {
         selectedOption = i;
-        expanded = false;
         drawInterface();
+        expanded = false;
         return true;
       }
     }
